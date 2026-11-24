@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>হাসিনা আসবে কি না?</title>
+<style>
+*{box-sizing:border-box}body{margin:0;padding:18px;background:#0b1220;color:#f4f7fc;font-family:Arial,sans-serif}
+.wrap{max-width:680px;margin:auto}header{text-align:center;padding:22px 8px}
+h1{color:#63e6a8;font-size:27px}.muted{color:#aab8cc;font-size:14px;line-height:1.5}
+.card{background:#17243a;border:1px solid #30415c;border-radius:16px;padding:18px;margin:16px 0}
+input{width:100%;padding:12px;border-radius:9px;border:1px solid #40516a;background:#0b192c;color:white;margin:8px 0;font-size:16px}
+button{width:100%;padding:13px;border:0;border-radius:9px;background:#63e6a8;color:#082016;font-size:16px;font-weight:bold;margin-top:10px;cursor:pointer}
+.option{background:#0d192b;border:1px solid #30415c;border-radius:12px;padding:15px;margin:13px 0}
+.option h3{font-size:17px;margin:0 0 8px}.bar{height:9px;background:#34445c;border-radius:10px;margin:9px 0;overflow:hidden}.fill{height:100%;background:#63e6a8;width:0}
+.balance{font-size:25px;color:#63e6a8;font-weight:bold}.hidden{display:none}
+.small{font-size:12px;color:#aab8cc}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><h1>হাসিনা আসবে কি না?</h1><p class="muted">আপনার মতামত দিন</p></header>
+
+<section class="card" id="login">
+<h3>অ্যাকাউন্টে প্রবেশ</h3>
+<input id="name" placeholder="আপনার নাম লিখুন" maxlength="30">
+<button onclick="login()">প্রবেশ করুন</button>
+</section>
+
+<main id="main" class="hidden">
+<section class="card">
+<p>স্বাগতম, <b id="username"></b></p>
+<p class="muted">আপনার ভার্চুয়াল কয়েন</p>
+<div class="balance"><span id="balance">100</span> কয়েন</div>
+</section>
+
+<section class="card">
+<h2>আপনার মতামত কোনটি?</h2>
+<p class="muted">একটি অপশন বেছে নিন এবং ভার্চুয়াল কয়েনের পরিমাণ লিখুন।</p>
+<div id="options"></div>
+<p id="myVote" class="muted"></p>
+<p class="small">এটি শুধু ভার্চুয়াল কয়েনভিত্তিক মতামত জরিপ। কয়েনের কোনো নগদ মূল্য নেই, কেনাবেচা বা উত্তোলন করা যায় না।</p>
+</section>
+
+<section class="card">
+<h3>অ্যাডমিন: ভার্চুয়াল কয়েন যোগ</h3>
+<input id="target" placeholder="ইউজারের নাম">
+<input id="coins" type="number" min="1" placeholder="কয়েনের পরিমাণ">
+<button onclick="addCoins()">কয়েন যোগ করুন</button>
+<p class="small">এটি শুধু একই ব্রাউজারের স্থানীয় পরীক্ষার সুবিধা; নিরাপদ অনলাইন অ্যাডমিন প্যানেল নয়।</p>
+</section>
+</main>
+</div>
+<script>
+const choices=[
+"হাসিনা ডিসেম্বর মাসে আসবে",
+"হাসিনা ডিসেম্বর মাসে আসবে না",
+"হাসিনা একদিন ফিরবে",
+"হাসিনা আর কখনো দেশে ফিরবে না"
+];
+let users=JSON.parse(localStorage.getItem('hp_users')||'{}');
+let totals=JSON.parse(localStorage.getItem('hp_totals')||'[0,0,0,0]');
+let current='';
+function persist(){localStorage.setItem('hp_users',JSON.stringify(users));localStorage.setItem('hp_totals',JSON.stringify(totals));render()}
+function login(){
+ const n=document.getElementById('name').value.trim();if(!n)return alert('নাম লিখুন');
+ current=n;if(!users[n])users[n]={balance:100,vote:-1,amount:0};
+ document.getElementById('login').classList.add('hidden');
+ document.getElementById('main').classList.remove('hidden');persist();
+}
+function vote(i){
+ const u=users[current],amount=Number(document.getElementById('amount'+i).value);
+ if(u.vote!==-1)return alert('আপনি ইতিমধ্যে মতামত দিয়েছেন');
+ if(!Number.isInteger(amount)||amount<1)return alert('সঠিক কয়েনের পরিমাণ লিখুন');
+ if(amount>u.balance)return alert('পর্যাপ্ত কয়েন নেই');
+ u.balance-=amount;u.vote=i;u.amount=amount;totals[i]+=amount;persist();
+}
+function addCoins(){
+ const n=document.getElementById('target').value.trim(),c=Number(document.getElementById('coins').value);
+ if(!n||!Number.isInteger(c)||c<1)return alert('সঠিক নাম ও কয়েন লিখুন');
+ if(!users[n])users[n]={balance:0,vote:-1,amount:0};
+ users[n].balance+=c;persist();alert('ভার্চুয়াল কয়েন যোগ হয়েছে');
+}
+function render(){
+ if(!current)return;
+ const u=users[current];document.getElementById('username').textContent=current;
+ document.getElementById('balance').textContent=u.balance;
+ const total=totals.reduce((a,b)=>a+b,0);
+ document.getElementById('options').innerHTML=choices.map((label,i)=>{
+ const pct=total?totals[i]/total*100:0;
+ return `<div class="option"><h3>${label}</h3><p class="muted">মোট ভার্চুয়াল কয়েন: ${totals[i]}</p><div class="bar"><div class="fill" style="width:${pct}%"></div></div>${u.vote===-1?`<input type="number" min="1" id="amount${i}" placeholder="কয়েনের পরিমাণ"><button onclick="vote(${i})">এই অপশন বেছে নিন</button>`:''}</div>`;
+ }).join('');
+ document.getElementById('myVote').textContent=u.vote===-1?'আপনি এখনো মতামত দেননি':`আপনার পছন্দ: ${choices[u.vote]} (${u.amount} কয়েন)`;
+}
+</script>
+</body>
+</html>
